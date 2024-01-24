@@ -1,0 +1,30 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres
+    volumes:
+      - ./postgresql_data:/var/lib/postgresql/data/
+    restart: always
+    environment:
+      - POSTGRES_DB = postgres 
+      - POSTGRES_USER = postgres
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - POSTGRES_PASSWORD = postgres
+
+  web:
+    build: .
+    command: bash -c "
+              python manage.py makemigrations
+              && python manage.py migrate
+              && python manage.py load_data customer_data.xlsx
+              && python manage.py load_data loan_data.xlsx
+              && python manage.py runserver 0.0.0.0:8000
+              "
+
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
